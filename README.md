@@ -15,8 +15,39 @@
 - <strong>Activates the item for employees in the Spotify settings</strong>
 - <strong>After closing the client, all developer menus will be disabled</strong>
 
-Just download and run [Enable-devtools.bat](https://cutt.ly/bGYVkFd)
+<h3>Launch type:</h3>
 
+<details>
+
+<summary><small>Enable only Devtools</small></summary><p>
+
+#### Just download and run [Enable-devtools.bat](https://raw.githack.com/amd64fox/Enable-devtools-Spotify/main/Enable-devtools.bat)
+
+or
+
+#### Run The following command in PowerShell:
+
+```ps1
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; (iwr -useb 'https://raw.githubusercontent.com/amd64fox/Enable-devtools-Spotify/main/Enable-devtools.ps1').Content | iex
+```
+
+</details>
+
+<details>
+
+<summary><small>Enable advanced Devtools settings</small></summary><p>
+
+#### Just download and run [Enable-devtools-plus.bat](https://raw.githack.com/amd64fox/Enable-devtools-Spotify/main/Enable-devtools-plus.bat)
+
+or
+
+#### Run The following command in PowerShell:
+
+```ps1
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; iex "& { $((iwr -useb 'https://raw.githubusercontent.com/amd64fox/Enable-devtools-Spotify/main/Enable-devtools.ps1').Content) } -dev_plus"
+```
+
+</details>
 <h2>A little more</h2>
 
 <details>

@@ -1,3 +1,10 @@
+param
+(
+    [Parameter(HelpMessage = 'Advanced Devtools.')]
+    [switch]$dev_plus
+    
+)
+
 $PSDefaultParameterValues['Stop-Process:ErrorAction'] = [System.Management.Automation.ActionPreference]::SilentlyContinue
 
 Stop-Process -Name Spotify
@@ -12,8 +19,8 @@ $xpui_spaCheck = (Test-Path -LiteralPath $xpui_spa_patch)
 $bnkCheck = (Test-Path -LiteralPath $offline_bnk)
 $spotiCheck = (Test-Path -LiteralPath $spotify_exe)
 $xpui_jsCheck = (Test-Path -LiteralPath $xpui_js_patch)
-$debugTools = '(return ).{1,3}(\?.{1,4}createElement\(.{3,7}{displayText:"Debug Tools")' , '$1true$2'
-$employee = '(..\(.\))(\?..createElement\(.{1,3},{filterMatchQuery:.{2,15}\("settings.employee"\))', 'true$2'
+$debugTools = '(return ).{1,3}(\?(.{1,4}createElement|\(.{1,7}.jsxs\))\(.{3,7}{displayText:"Debug Tools")' , '$1true$2'
+$employee = '(..\(.\))(\?(..createElement|\(.{1,7}jsxs\))\(.{1,3},{filterMatchQuery:.{2,15}\("settings.employee"\))', 'true$2'
 
 if (!($spotiCheck)) {
 
@@ -25,6 +32,7 @@ if ($bnkCheck) {
     $old = [IO.File]::ReadAllText($offline_bnk, $ANSI)
     $new = $old -replace '(?<=app-developer..|app-developer>)0', '2'
     [IO.File]::WriteAllText($offline_bnk, $new, $ANSI)
+    if (!($dev_plus)) { Start-Process -FilePath $spotify_exe }
 }
 
 else {
@@ -34,64 +42,68 @@ else {
     exit
 }
 
-if ($xpui_jsCheck -and $xpui_spaCheck) { 
-    Write-Host "Location of Spotify files is broken, reinstall Spotify"
-    Write-Host "Part of the DevTools functionality is not activated"`n
-    Start-Process -FilePath $spotify_exe
-    pause
-    exit
-}
-if (!($xpui_jsCheck) -and !($xpui_spaCheck)) { 
-    Write-Host "xpui system files not found, reinstall Spotify"`n
-    pause
-    exit
-}
+if ($dev_plus) {
 
-if ($xpui_spaCheck) {
+    if ($xpui_jsCheck -and $xpui_spaCheck) { 
+        Write-Host "Location of Spotify files is broken, reinstall Spotify"
+        Write-Host "Part of the DevTools functionality is not activated"`n
+        Start-Process -FilePath $spotify_exe
+        pause
+        exit
+    }
+    if (!($xpui_jsCheck) -and !($xpui_spaCheck)) { 
+        Write-Host "xpui system files not found, reinstall Spotify"`n
+        pause
+        exit
+    }
 
-    copy-Item $xpui_spa_patch $xpui_spa_copy
 
-    Add-Type -Assembly 'System.IO.Compression.FileSystem'
-    $zip = [System.IO.Compression.ZipFile]::Open($xpui_spa_patch, 'update')
-    $entry_xpui = $zip.GetEntry('xpui.js')
-    $reader = New-Object System.IO.StreamReader($entry_xpui.Open())
-    $xpui_js = $reader.ReadToEnd()
-    $reader.Close()
+    if ($xpui_spaCheck) {
 
-    $xpui_js = $xpui_js -replace $debugTools[0], $debugTools[1] -replace $employee[0] , $employee[1]
+        copy-Item $xpui_spa_patch $xpui_spa_copy
 
-    $writer = New-Object System.IO.StreamWriter($entry_xpui.Open())
-    $writer.BaseStream.SetLength(0)
-    $writer.Write($xpui_js)
-    $writer.Close()
-    $zip.Dispose()
+        Add-Type -Assembly 'System.IO.Compression.FileSystem'
+        $zip = [System.IO.Compression.ZipFile]::Open($xpui_spa_patch, 'update')
+        $entry_xpui = $zip.GetEntry('xpui.js')
+        $reader = New-Object System.IO.StreamReader($entry_xpui.Open())
+        $xpui_js = $reader.ReadToEnd()
+        $reader.Close()
 
-    Start-Process -FilePath $spotify_exe
+        $xpui_js = $xpui_js -replace $debugTools[0], $debugTools[1] -replace $employee[0] , $employee[1]
 
-    Start-Sleep -Milliseconds 1500
+        $writer = New-Object System.IO.StreamWriter($entry_xpui.Open())
+        $writer.BaseStream.SetLength(0)
+        $writer.Write($xpui_js)
+        $writer.Close()
+        $zip.Dispose()
 
-    Remove-item $xpui_spa_patch -Recurse -Force
-    Rename-Item -path $xpui_spa_copy -NewName $xpui_spa_patch
-}
+        Start-Process -FilePath $spotify_exe
 
-if ($xpui_jsCheck) {
+        Start-Sleep -Milliseconds 1500
 
-    copy-Item $xpui_js_patch $xpui_js_copy
+        Remove-item $xpui_spa_patch -Recurse -Force
+        Rename-Item -path $xpui_spa_copy -NewName $xpui_spa_patch
+    }
 
-    $reader = New-Object -TypeName System.IO.StreamReader -ArgumentList $xpui_js_patch
-    $xpui_js = $reader.ReadToEnd()
-    $reader.Close()
+    if ($xpui_jsCheck) {
 
-    $xpui_js = $xpui_js -replace $debugTools[0], $debugTools[1] -replace $employee[0] , $employee[1]
-    $writer = New-Object System.IO.StreamWriter -ArgumentList $xpui_js_patch
-    $writer.BaseStream.SetLength(0)
-    $writer.Write($xpui_js)
-    $writer.Close()
+        copy-Item $xpui_js_patch $xpui_js_copy
 
-    Start-Process -FilePath $spotify_exe
+        $reader = New-Object -TypeName System.IO.StreamReader -ArgumentList $xpui_js_patch
+        $xpui_js = $reader.ReadToEnd()
+        $reader.Close()
 
-    Start-Sleep -Milliseconds 1500
+        $xpui_js = $xpui_js -replace $debugTools[0], $debugTools[1] -replace $employee[0] , $employee[1]
+        $writer = New-Object System.IO.StreamWriter -ArgumentList $xpui_js_patch
+        $writer.BaseStream.SetLength(0)
+        $writer.Write($xpui_js)
+        $writer.Close()
 
-    Remove-item $xpui_js_patch -Recurse -Force
-    Rename-Item -path $xpui_js_copy -NewName $xpui_js_patch
+        Start-Process -FilePath $spotify_exe
+
+        Start-Sleep -Milliseconds 1500
+
+        Remove-item $xpui_js_patch -Recurse -Force
+        Rename-Item -path $xpui_js_copy -NewName $xpui_js_patch
+    }
 }
