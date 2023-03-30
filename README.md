@@ -59,7 +59,7 @@ or
 
 | Debug Tools | Debug Tools |
 | :----: | :----: |
-| ![Снимок экрана 2022-09-07 152032](https://user-images.githubusercontent.com/62529699/188882504-a3c0f836-8ad5-4db6-9c0a-c53846a9d797.jpg) | ![Снимок экрана 2022-09-07 155426](https://user-images.githubusercontent.com/62529699/188883988-39e4bd34-1a83-4527-878f-080e9ec415be.jpg)
+| ![123](https://user-images.githubusercontent.com/62529699/228794076-0d9b158f-c3d8-411e-b095-7c0f8065b268.png) | ![Снимок экрана 2022-09-07 155426](https://user-images.githubusercontent.com/62529699/188883988-39e4bd34-1a83-4527-878f-080e9ec415be.jpg)
 
 | Item for employees in the Spotify settings |
 | :----: |
