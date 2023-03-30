@@ -19,7 +19,6 @@ $xpui_spaCheck = (Test-Path -LiteralPath $xpui_spa_patch)
 $bnkCheck = (Test-Path -LiteralPath $offline_bnk)
 $spotiCheck = (Test-Path -LiteralPath $spotify_exe)
 $xpui_jsCheck = (Test-Path -LiteralPath $xpui_js_patch)
-$debugTools = '(return ).{1,3}(\?(.{1,4}createElement|\(.{1,7}.jsxs\))\(.{3,7}{displayText:"Debug Tools")' , '$1true$2'
 $employee = '(..\(.\))(\?(..createElement|\(.{1,7}jsxs\))\(.{1,3},{filterMatchQuery:.{2,15}\("settings.employee"\))', 'true$2'
 
 if (!($spotiCheck)) {
@@ -69,7 +68,7 @@ if ($dev_plus) {
         $xpui_js = $reader.ReadToEnd()
         $reader.Close()
 
-        $xpui_js = $xpui_js -replace $debugTools[0], $debugTools[1] -replace $employee[0] , $employee[1]
+        $xpui_js = $xpui_js -replace $employee[0] , $employee[1]
 
         $writer = New-Object System.IO.StreamWriter($entry_xpui.Open())
         $writer.BaseStream.SetLength(0)
@@ -93,7 +92,7 @@ if ($dev_plus) {
         $xpui_js = $reader.ReadToEnd()
         $reader.Close()
 
-        $xpui_js = $xpui_js -replace $debugTools[0], $debugTools[1] -replace $employee[0] , $employee[1]
+        $xpui_js = $xpui_js -replace $employee[0] , $employee[1]
         $writer = New-Object System.IO.StreamWriter -ArgumentList $xpui_js_patch
         $writer.BaseStream.SetLength(0)
         $writer.Write($xpui_js)

@@ -11,8 +11,8 @@
 
 - <strong>Activates the main developer options in the menu</strong>
 - <strong>Activates the developer menu on the right mouse click</strong>
-- <strong>Activates Debug Tools</strong> *(Only works with version 1.1.92 and above)*
-- <strong>Activates the item for employees in the Spotify settings</strong>
+- <strong>Activates Debug Tools</strong> 
+- <strong>Activates the item for employees in the Spotify settings</strong> *(to activate run advanced Devtools)*
 - <strong>After closing the client, all developer menus will be disabled</strong>
 
 <h3>Launch type:</h3>
