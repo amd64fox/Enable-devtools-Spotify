@@ -29,7 +29,7 @@ if (!($spotiCheck)) {
 if ($bnkCheck) {
     $ANSI = [Text.Encoding]::GetEncoding(1251)
     $old = [IO.File]::ReadAllText($offline_bnk, $ANSI)
-    $new = $old -replace '(?<=app-developer..|app-developer>)0', '2'
+    $new = $old -replace '(?<=app-developer..|app-developer>)[01]', '2'
     [IO.File]::WriteAllText($offline_bnk, $new, $ANSI)
     if (!($dev_plus)) { Start-Process -FilePath $spotify_exe }
 }
