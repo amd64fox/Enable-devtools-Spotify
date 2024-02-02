@@ -1,108 +1,133 @@
-param
-(
-    [Parameter(HelpMessage = 'Advanced Devtools.')]
-    [switch]$dev_plus
-    
-)
+function Kill-Spotify {
+    param (
+        [int]$maxAttempts = 5
+    )
 
-$PSDefaultParameterValues['Stop-Process:ErrorAction'] = [System.Management.Automation.ActionPreference]::SilentlyContinue
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        $allProcesses = Get-Process -ErrorAction SilentlyContinue
 
-Stop-Process -Name Spotify
+        $spotifyProcesses = $allProcesses | Where-Object { $_.ProcessName -like "*spotify*" }
 
-$offline_bnk = "$env:LOCALAPPDATA\Spotify\offline.bnk"
-$spotify_exe = "$env:APPDATA\Spotify\Spotify.exe"
-$xpui_spa_patch = "$env:APPDATA\Spotify\Apps\xpui.spa"
-$xpui_spa_copy = "$env:APPDATA\Spotify\Apps\xpui.spa.adminbak"
-$xpui_js_patch = "$env:APPDATA\Spotify\Apps\xpui\xpui.js"
-$xpui_js_copy = "$env:APPDATA\Spotify\Apps\xpui\xpui.js.adminbak"
-$xpui_spaCheck = (Test-Path -LiteralPath $xpui_spa_patch)
-$bnkCheck = (Test-Path -LiteralPath $offline_bnk)
-$spotiCheck = (Test-Path -LiteralPath $spotify_exe)
-$xpui_jsCheck = (Test-Path -LiteralPath $xpui_js_patch)
-$employee = '(..\(.\))(\?(..createElement|\(.{1,7}jsxs\))\(.{1,3},{filterMatchQuery:.{2,15}\("settings.employee"\))', 'true$2'
+        if ($spotifyProcesses) {
+            foreach ($process in $spotifyProcesses) {
+                try {
+                    Stop-Process -Id $process.Id -Force
+                }
+                catch {
+                    # Ignore NoSuchProcess exception
+                }
+            }
+            Start-Sleep -Seconds 1
+        }
+        else {
+            break
+        }
+    }
 
-if (!($spotiCheck)) {
-
-    Write-Host "Spotify not found"`n
-    exit
+    if ($attempt -gt $maxAttempts) {
+        Write-Host "The maximum number of attempts to terminate a process has been reached."
+    }
 }
-if ($bnkCheck) {
+
+function Update-BNKFile {
+    param (
+        [string]$bnk
+    )
+
     $ANSI = [Text.Encoding]::GetEncoding(1251)
-    $old = [IO.File]::ReadAllText($offline_bnk, $ANSI)
+    $old = [IO.File]::ReadAllText($bnk, $ANSI)
     $new = $old -replace '(?<=app-developer..|app-developer>)[01]', '2'
-    [IO.File]::WriteAllText($offline_bnk, $new, $ANSI)
-    if (!($dev_plus)) { Start-Process -FilePath $spotify_exe }
+    [IO.File]::WriteAllText($bnk, $new, $ANSI)
 }
 
-else {
-    Write-Host "offline.bnk not found"`n
-    Write-Host "Seems like Spotfiy hasn't been launched yet, you need to login to your account `nwait for Spotfiy to fully launch, then close it and run the script again"`n
-    pause
-    exit
+function Check-Os {
+    param(
+        [string]$check
+    )
+
+    $osVersions = @{}
+    $osVersions["win7"] = "6.1"
+    $osVersions["win8"] = "6.2, 6.3"
+    $osVersions["win10"] = "10.0"
+
+    $currentVersion = "$(([System.Environment]::OSVersion.Version).Major).$(([System.Environment]::OSVersion.Version).Minor)"
+
+    foreach ($version in $check -split ", ") {
+        if ($osVersions.ContainsKey($version) -and $osVersions[$version] -contains $currentVersion) {
+            return $true
+        }
+    }
+
+    return $false
 }
 
-if ($dev_plus) {
+function Prepare-Paths {
 
-    if ($xpui_jsCheck -and $xpui_spaCheck) { 
-        Write-Host "Location of Spotify files is broken, reinstall Spotify"
-        Write-Host "Part of the DevTools functionality is not activated"`n
-        Start-Process -FilePath $spotify_exe
-        pause
-        exit
-    }
-    if (!($xpui_jsCheck) -and !($xpui_spaCheck)) { 
-        Write-Host "xpui system files not found, reinstall Spotify"`n
-        pause
-        exit
+    $psv = $PSVersionTable.PSVersion.major
+
+    if ($psv -ge 7) {
+        Import-Module Appx -UseWindowsPowerShell -WarningAction:SilentlyContinue
     }
 
+    if ((Check-Os "win8, win10") -and (Get-AppxPackage -Name SpotifyAB.SpotifyMusic)) {
 
-    if ($xpui_spaCheck) {
+        $spotify_exe = Get-Command -Name Spotify
+        $spotifyFolder = Get-ChildItem "$env:LOCALAPPDATA\Packages\" -Filter "SpotifyAB.SpotifyMusic*" -Directory | Select-Object -ExpandProperty FullName
+        $offline_bnk = Join-Path $spotifyFolder "LocalState\Spotify\offline.bnk"
+        $bnkCheck = (Test-Path -LiteralPath $offline_bnk)
 
-        copy-Item $xpui_spa_patch $xpui_spa_copy
+        if ($null -ne $spotify_exe -and $bnkCheck) {
+            return @{
+                exe = $spotify_exe.Source
+                bnk = $offline_bnk
+            }
+        }
+        else {
+            if ($null -eq $spotify_exe) {
+                Write-Warning "could not find Spotify.exe for MS"
+                pause
+                exit
+            }
+            else {
+                Write-Warning "could not find offline.bnk for MS, please login to Spotify"
+                pause
+                exit
+            }
 
-        Add-Type -Assembly 'System.IO.Compression.FileSystem'
-        $zip = [System.IO.Compression.ZipFile]::Open($xpui_spa_patch, 'update')
-        $entry_xpui = $zip.GetEntry('xpui.js')
-        $reader = New-Object System.IO.StreamReader($entry_xpui.Open())
-        $xpui_js = $reader.ReadToEnd()
-        $reader.Close()
-
-        $xpui_js = $xpui_js -replace $employee[0] , $employee[1]
-
-        $writer = New-Object System.IO.StreamWriter($entry_xpui.Open())
-        $writer.BaseStream.SetLength(0)
-        $writer.Write($xpui_js)
-        $writer.Close()
-        $zip.Dispose()
-
-        Start-Process -FilePath $spotify_exe
-
-        Start-Sleep -Milliseconds 1500
-
-        Remove-item $xpui_spa_patch -Recurse -Force
-        Rename-Item -path $xpui_spa_copy -NewName $xpui_spa_patch
+        }
     }
+    else {
 
-    if ($xpui_jsCheck) {
+        $spotify_exe = "$env:APPDATA\Spotify\Spotify.exe"
+        $spotiCheck = (Test-Path -LiteralPath $spotify_exe)
+        $offline_bnk = "$env:LOCALAPPDATA\Spotify\offline.bnk"
+        $bnkCheck = (Test-Path -LiteralPath $offline_bnk)
 
-        copy-Item $xpui_js_patch $xpui_js_copy
-
-        $reader = New-Object -TypeName System.IO.StreamReader -ArgumentList $xpui_js_patch
-        $xpui_js = $reader.ReadToEnd()
-        $reader.Close()
-
-        $xpui_js = $xpui_js -replace $employee[0] , $employee[1]
-        $writer = New-Object System.IO.StreamWriter -ArgumentList $xpui_js_patch
-        $writer.BaseStream.SetLength(0)
-        $writer.Write($xpui_js)
-        $writer.Close()
-
-        Start-Process -FilePath $spotify_exe
-
-        Start-Sleep -Milliseconds 1500
-
-        Remove-item $xpui_js_patch -Recurse -Force
-        Rename-Item -path $xpui_js_copy -NewName $xpui_js_patch
+        if ($spotiCheck -and $bnkCheck) {
+            return @{
+                exe = $spotify_exe
+                bnk = $offline_bnk
+            }
+        }
+        else {
+            if (!($spotiCheck)) {
+                Write-Warning "could not find Spotify.exe"
+                pause
+                exit
+            }
+            else {
+                Write-Warning "could not find offline.bnk, please login to Spotify"
+                pause
+                exit
+            }
+        }
     }
 }
+
+Kill-Spotify
+
+$p = Prepare-Paths
+
+Update-BNKFile -bnk $p.bnk
+
+Start-Process -FilePath $p.exe
