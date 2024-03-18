@@ -166,6 +166,10 @@ function Dw-Spa {
         [string]$folderApps
     )
 
+    $url = "https://raw.githubusercontent.com/amd64fox/Enable-devtools-Spotify/main/res/{0}.spa"
+    $path = "$folderApps\{0}.spa"
+    $n = ("diag", "message-visualization")
+
     function Job {
         param (
             [Alias("u")]
@@ -174,8 +178,8 @@ function Dw-Spa {
             [Alias("p")]
             [string]$path
         )
-    
-        $job = Start-Job -ScriptBlock {
+
+        Start-Job -ScriptBlock {
             param ($url, $path)
     
             Invoke-RestMethod -Uri $url -OutFile $path
@@ -183,25 +187,17 @@ function Dw-Spa {
     
     }
 
-    $url = "https://raw.githubusercontent.com/amd64fox/Enable-devtools-Spotify/main/res/{0}.spa"
-    $path = "$folderApps\{0}.spa"
-    $n = ("diag", "message-visualization")
+    $n | ForEach-Object { Job -u ($url -f $_) -p ($path -f $_) }
 
-    
-    (Job -u ($url -f $n[0]) -p ($path -f $n[0])), (Job -u ($url -f $n[1]) -p ($path -f $n[1]))
-    
 }
-    
-
+  
 Kill-Spotify
 
 $p = Prepare-Paths
 
-if ($p.apps) { 
-
-    Dw-Spa -apps $p.folderApp 
-}
+if ($p.apps) { $null = Dw-Spa -apps $p.folderApp }
 
 Update-BNKFile -bnk $p.bnk
+
 
 Start-Process -FilePath $p.exe
