@@ -195,9 +195,8 @@ Kill-Spotify
 
 $p = Prepare-Paths
 
-if ($p.apps) { $null = Dw-Spa -apps $p.folderApp }
-
 Update-BNKFile -bnk $p.bnk
 
+if ($p.apps) { $null = Dw-Spa -apps $p.folderApp }
 
 Start-Process -FilePath $p.exe
