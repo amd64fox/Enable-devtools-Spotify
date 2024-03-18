@@ -5,13 +5,15 @@
 <h2>Requirements:</h2>
 
 - Spotify Desktop or Microsoft Store version
-- Spotify client must already be installed and logged in
+
+> [!IMPORTANT] 
+ Spotify client must already be installed and logged in
 
 <h2>What does the script do?</h2>
 
 - <strong>Activates the main developer options in the menu</strong>
 - <strong>Activates the developer menu on the right mouse click</strong>
-- <strong>Activates Debug Tools</strong> 
+- <strong>Loads additional resources to enable cosmos debugger and utils</strong> 
 - <strong>After closing the client, all developer menus will be disabled</strong>
 
 <h2>Quick start:</h2>
