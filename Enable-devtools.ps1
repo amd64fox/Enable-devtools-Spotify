@@ -170,7 +170,8 @@ function Dw-Spa {
     $path = "$folderApps\{0}.spa"
     $n = ("diag", "message-visualization")
 
-    function Job {
+    function Dw {
+        
         param (
             [Alias("u")]
             [string]$url,
@@ -179,15 +180,10 @@ function Dw-Spa {
             [string]$path
         )
 
-        Start-Job -ScriptBlock {
-            param ($url, $path)
-    
-            Invoke-RestMethod -Uri $url -OutFile $path
-        } -ArgumentList $url, $path
-    
+        Invoke-RestMethod -Uri $url -OutFile $path
     }
 
-    $n | ForEach-Object { Job -u ($url -f $_) -p ($path -f $_) }
+    $n | ForEach-Object { Dw -u ($url -f $_) -p ($path -f $_) }
 
 }
   
@@ -195,8 +191,8 @@ Kill-Spotify
 
 $p = Prepare-Paths
 
-Update-BNKFile -bnk $p.bnk
-
 if ($p.apps) { $null = Dw-Spa -apps $p.folderApp }
+
+Update-BNKFile -bnk $p.bnk
 
 Start-Process -FilePath $p.exe
