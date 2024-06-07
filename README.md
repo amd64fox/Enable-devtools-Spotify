@@ -13,8 +13,10 @@
 
 - <strong>Activates the main developer options in the menu</strong>
 - <strong>Activates the developer menu on the right mouse click</strong>
-- <strong>Loads additional resources to enable cosmos debugger and utils</strong> 
-- <strong>After closing the client, all developer menus will be disabled</strong>
+- <strong>Loads additional resources to enable cosmos debugger and utils</strong>
+
+> [!NOTE]
+After closing the client, all developer menus will be disabled, for new versions of the client this logic has stopped working, to disable devtools just run the script again
 
 <h2>Quick start:</h2>
 

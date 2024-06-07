@@ -34,10 +34,24 @@ function Update-BNKFile {
         [string]$bnk
     )
 
-    $ANSI = [Text.Encoding]::GetEncoding(1251)
-    $old = [IO.File]::ReadAllText($bnk, $ANSI)
-    $new = $old -replace '(?<=app-developer..|app-developer>)[01]', '2'
+$ANSI = [Text.Encoding]::GetEncoding(1251)
+$old = [IO.File]::ReadAllText($bnk, $ANSI)
+
+$pattern = '(?<=app-developer..|app-developer>)'
+
+switch -Regex ($old) {
+    "${pattern}2" {
+        $new = $old -replace "${pattern}2", '1'
+    }
+    "${pattern}[01]" {
+        $new = $old -replace "${pattern}[01]", '2'
+    }
+}
+
+if ($new -ne $null) {
     [IO.File]::WriteAllText($bnk, $new, $ANSI)
+}
+
 }
 
 function Check-Os {
