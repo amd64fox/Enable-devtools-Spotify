@@ -13,7 +13,7 @@
 
 - <strong>Activates the main developer options in the menu</strong>
 - <strong>Activates the developer menu on the right mouse click</strong>
-- <strong>Additional launch [parameters](https://github.com/amd64fox/Enable-devtools-Spotify/edit/main/README.md#script-parameters)</strong>
+- <strong>Additional launch [parameters](https://github.com/amd64fox/Enable-devtools-Spotify?tab=readme-ov-file#script-parameters)</strong>                                         
 
 > [!NOTE]
 After closing the client, all developer menus will be disabled, for new versions of the client this logic has stopped working, to disable devtools just run the script again
