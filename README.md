@@ -13,7 +13,7 @@
 
 - <strong>Activates the main developer options in the menu</strong>
 - <strong>Activates the developer menu on the right mouse click</strong>
-- <strong>Loads additional resources to enable cosmos debugger and utils</strong>
+- <strong>Additional launch [parameters](https://github.com/amd64fox/Enable-devtools-Spotify/edit/main/README.md#script-parameters)</strong>
 
 > [!NOTE]
 After closing the client, all developer menus will be disabled, for new versions of the client this logic has stopped working, to disable devtools just run the script again
@@ -28,10 +28,24 @@ or
 #### Run The following command in PowerShell:
 
 ```ps1
-(iwr -useb 'https://raw.githubusercontent.com/amd64fox/Enable-devtools-Spotify/main/Enable-devtools.ps1').Content | iex
+iex "& {$(iwr -useb 'https://raw.githubusercontent.com/amd64fox/Enable-devtools-Spotify/main/Enable-devtools.ps1')}"
+```
+```ps1
+iex "& {$(iwr -useb 'https://raw.githubusercontent.com/amd64fox/Enable-devtools-Spotify/main/Enable-devtools.ps1')} -extra"
 ```
 
 <h2></h2>
+
+
+## Script parameters:
+
+| Parameter        | Description                                                           |    
+|------------------|-----------------------------------------------------------------------|
+| `-extra`         | Enable Cosmos debugger & Utils (requires additional resource loading) |
+| `-console`       | Show console output                                                   |
+| `-allow_pasting` | Allow pasting in devtools console                                     |
+| `-minimized`     | Minimize client at start                                              |
+
 
 > [!NOTE] 
 [Enable-devtools-Spotify](https://gist.github.com/jetfir3/d66f491d0683e2bdbdf9f60068e9984b) (Mac & Linux) by [jetfire](https://github.com/jetfir3)

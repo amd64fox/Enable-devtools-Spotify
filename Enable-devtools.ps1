@@ -1,29 +1,26 @@
+param (
+    [switch]$allow_pasting,
+    [switch]$console,
+    [switch]$minimized,
+    [switch]$extra
+)
+
 function Kill-Spotify {
     param (
         [int]$maxAttempts = 5
     )
-
     for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
-        $allProcesses = Get-Process -ErrorAction SilentlyContinue
-
-        $spotifyProcesses = $allProcesses | Where-Object { $_.ProcessName -like "*spotify*" }
-
+        $spotifyProcesses = Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -like "Spotify" }
         if ($spotifyProcesses) {
             foreach ($process in $spotifyProcesses) {
-                try {
-                    Stop-Process -Id $process.Id -Force
-                }
-                catch {
-                    # Ignore NoSuchProcess exception
-                }
+                Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
             }
-            Start-Sleep -Seconds 1
+            Start-Sleep -Milliseconds 500
         }
         else {
             break
         }
     }
-
     if ($attempt -gt $maxAttempts) {
         Write-Host "The maximum number of attempts to terminate a process has been reached."
     }
@@ -34,23 +31,24 @@ function Update-BNKFile {
         [string]$bnk
     )
 
-$ANSI = [Text.Encoding]::GetEncoding(1251)
-$old = [IO.File]::ReadAllText($bnk, $ANSI)
+    $ANSI = [Text.Encoding]::GetEncoding(1251)
+    $old = [IO.File]::ReadAllText($bnk, $ANSI)
 
-$pattern = '(?<=app-developer..|app-developer>)'
+    $pattern = '(?<=app-developer..|app-developer>)'
 
-switch -Regex ($old) {
-    "${pattern}2" {
-        $new = $old -replace "${pattern}2", '1'
+    switch -Regex ($old) {
+        "${pattern}2" {
+            $new = $old -replace "${pattern}2", '1'
+            $global:foundPattern2 = $true 
+        }
+        "${pattern}[01]" {
+            $new = $old -replace "${pattern}[01]", '2'
+        }
     }
-    "${pattern}[01]" {
-        $new = $old -replace "${pattern}[01]", '2'
-    }
-}
 
-if ($new -ne $null) {
-    [IO.File]::WriteAllText($bnk, $new, $ANSI)
-}
+    if ($new -ne $null) {
+        [IO.File]::WriteAllText($bnk, $new, $ANSI)
+    }
 
 }
 
@@ -59,10 +57,11 @@ function Check-Os {
         [string]$check
     )
 
-    $osVersions = @{}
-    $osVersions["win7"] = "6.1"
-    $osVersions["win8"] = "6.2, 6.3"
-    $osVersions["win10"] = "10.0"
+    $osVersions = @{
+        "win7"  = "6.1"
+        "win8"  = "6.2, 6.3"
+        "win10" = "10.0"
+    }
 
     $currentVersion = "$(([System.Environment]::OSVersion.Version).Major).$(([System.Environment]::OSVersion.Version).Minor)"
 
@@ -79,28 +78,29 @@ function extraApps {
 
     param(
         [Alias("apps")]
-        [string]$folderApps
+        [string]$folderApps,
+        [switch]$extra
     )
-    
+
+    $diagPath = Join-Path -Path $folderApps -ChildPath "diag.spa"
+    $visualPath = Join-Path -Path $folderApps -ChildPath "message-visualization.spa"
+
+    if (!$extra -or $global:foundPattern2) {
+        return $false
+    }
+
     if ((Test-Path $folderApps -PathType Container)) {
-       
-    
-        $diagPath = Join-Path -Path $folderApps -ChildPath "diag.spa"
-        $visualPath = Join-Path -Path $folderApps -ChildPath "message-visualization.spa"
-    
-        if ((Test-Path $diagPath -PathType Leaf) -and (Get-Item $diagPath).Length -gt 10240 -and
-        (Test-Path $visualPath -PathType Leaf) -and (Get-Item $visualPath).Length -gt 307200) {
-            return $false
+        if ((-not (Test-Path $diagPath -PathType Leaf) -or (Get-Item $diagPath).Length -le 10240) -or
+            (-not (Test-Path $visualPath -PathType Leaf) -or (Get-Item $visualPath).Length -le 307200)) {
+            return $true
         }
         else {
-            return $true
+            return $false
         }
     }
     else {
-    
         New-Item -Path $folderApps -ItemType Directory | Out-Null
         return $true
-    
     }
 }
 
@@ -124,13 +124,13 @@ function Prepare-Paths {
             return @{
                 exe       = $spotify_exe.Source
                 bnk       = $offline_bnk
-                apps      = extraApps -apps $apps
+                apps      = extraApps -apps $apps -extra:$extra
                 folderApp = $apps
             }
         }
         else {
             if ($null -eq $spotify_exe) {
-                Write-Warning "could not find Spotify.exe for MS"
+                Write-Warning "could not find Spotify.exe for MS, please install/reinstall Spotify"
                 pause
                 exit
             }
@@ -154,13 +154,13 @@ function Prepare-Paths {
             return @{
                 exe       = $spotify_exe
                 bnk       = $offline_bnk
-                apps      = extraApps -apps $apps
+                apps      = extraApps -apps $apps -extra:$extra
                 folderApp = $apps
             }
         }
         else {
             if (!($spotiCheck)) {
-                Write-Warning "could not find Spotify.exe"
+                Write-Warning "could not find Spotify.exe, please install/reinstall Spotify"
                 pause
                 exit
             }
@@ -185,11 +185,11 @@ function Dw-Spa {
     $n = ("diag", "message-visualization")
 
     function Dw {
-        
+
         param (
             [Alias("u")]
             [string]$url,
-    
+
             [Alias("p")]
             [string]$path
         )
@@ -200,13 +200,36 @@ function Dw-Spa {
     $n | ForEach-Object { Dw -u ($url -f $_) -p ($path -f $_) }
 
 }
-  
+
 Kill-Spotify
 
 $p = Prepare-Paths
 
 if ($p.apps) { $null = Dw-Spa -apps $p.folderApp }
 
-Update-BNKFile -bnk $p.bnk
+$foundPattern2 = $false
 
-Start-Process -FilePath $p.exe
+Update-BNKFile -bnk $p.bnk 
+
+$startProcessArgs = @() 
+$params = @{} 
+
+if (-not $foundPattern2) {
+    if ($allow_pasting) {
+        $startProcessArgs += "--unsafely-disable-devtools-self-xss-warnings"
+    }
+    if ($console) {
+        $startProcessArgs += "--show-console"
+    }
+    if ($minimized) {
+        $startProcessArgs += "--minimized"
+    }
+}
+
+if ($startProcessArgs) {
+    $params["ArgumentList"] = $startProcessArgs 
+}
+
+$params["FilePath"] = $p.exe 
+
+Start-Process @params
