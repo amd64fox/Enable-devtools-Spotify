@@ -1,8 +1,8 @@
 @echo off
 
-:: Line for changing spotx parameters, each parameter should be separated by a space
-:: Example
-:: set param=-extra
+:: line for changing parameters, each parameter should be separated by a space
+:: example:
+:: set param=-extra -minimized
 set param=
 
 set url='https://raw.githubusercontent.com/amd64fox/Enable-devtools-Spotify/main/Enable-devtools.ps1'
